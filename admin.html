@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Records</title>
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase config (Make sure it's the same as your scanner page)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZr19E8Az31IFO-N5UQmEdYH9dPsObBHE",
+            authDomain: "patagqrattendance.firebaseapp.com",
+            projectId: "patagqrattendance",
+            storageBucket: "patagqrattendance.firebasestorage.app",
+            messagingSenderId: "291584697761",
+            appId: "1:291584697761:web:4579629c4acdcfc1f517e0"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Function to fetch attendance data
+        async function fetchAttendance() {
+            const tableBody = document.getElementById("attendance-table-body");
+            tableBody.innerHTML = "<tr><td colspan='3'>Loading...</td></tr>";
+
+            const studentFilter = document.getElementById("student-filter").value.trim();
+            const dateFilter = document.getElementById("date-filter").value;
+
+            try {
+                const q = query(collection(db, "attendance"), orderBy("timestamp", "desc")); // Order by latest
+                const querySnapshot = await getDocs(q);
+
+                tableBody.innerHTML = ""; // Clear table before adding rows
+
+                if (querySnapshot.empty) {
+                    tableBody.innerHTML = "<tr><td colspan='3'>No attendance records found</td></tr>";
+                    return;
+                }
+
+                let recordsFound = false;
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const timestamp = data.timestamp 
+                        ? new Date(data.timestamp.seconds * 1000)
+                        : null; // Convert Firestore timestamp
+
+                    if (!timestamp) return; // Skip if no timestamp
+
+                    const formattedDate = timestamp.toISOString().split("T")[0]; // Extract YYYY-MM-DD
+                    const formattedTimestamp = timestamp.toLocaleString();
+
+                    // Apply filters
+                    if (studentFilter && data.studentId !== studentFilter) return;
+                    if (dateFilter && formattedDate !== dateFilter) return;
+
+                    const row = `<tr>
+                        <td>${data.studentId || "Unknown"}</td>
+                        <td>${formattedTimestamp}</td>
+                    </tr>`;
+
+                    tableBody.innerHTML += row;
+                    recordsFound = true;
+                });
+
+                if (!recordsFound) {
+                    tableBody.innerHTML = "<tr><td colspan='3'>No matching records</td></tr>";
+                }
+
+            } catch (error) {
+                console.error("Error fetching attendance:", error);
+                tableBody.innerHTML = "<tr><td colspan='3'>Error loading data</td></tr>";
+            }
+        }
+
+        // Call function when the page loads
+        window.onload = fetchAttendance;
+        window.fetchAttendance = fetchAttendance;
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .links-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .link-button {
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+
+        .link-button:hover {
+            background-color: #45a049;
+        }
+
+        label, input, button {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        input {
+            padding: 5px;
+            width: 100%;
+            max-width: 300px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            margin: auto;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 14px;
+            }
+
+            .link-button {
+                font-size: 16px;
+                padding: 8px 15px;
+            }
+
+            label, input, button {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>View Attendance</h1>
+
+<div class="links-container">
+    <a href="index.html" class="link-button">Home</a>
+    <a href="attendance.html" class="link-button">Attendance</a>
+    <a href="managestudents.html" class="link-button">Manage Students</a>
+</div>
+
+<br>
+
+<label for="student-filter">Student ID:</label>
+<input type="text" id="student-filter" placeholder="Enter Student ID">
+
+<label for="date-filter">Date:</label>
+<input type="date" id="date-filter">
+
+<button onclick="fetchAttendance()">Apply Filters</button>
+
+<h1>Attendance Records</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Student ID</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody id="attendance-table-body">
+        <tr><td colspan="2">Loading...</td></tr>
+    </tbody>
+</table>
+
+</body>
+</html>

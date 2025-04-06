@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Manage Students</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding-top: 60px; /* Added padding to prevent content from being hidden under the nav */
+    }
+
+    h1 {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    form {
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    input {
+        padding: 8px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    button {
+        padding: 10px 15px;
+        background-color: #4CAF50; /* Same color as the nav bar */
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    li {
+        padding: 8px;
+        background-color: #fff;
+        margin: 5px 0;
+        border-radius: 4px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .links-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .link-button {
+        text-decoration: none;
+        padding: 10px 20px;
+        background-color: #4CAF50; /* Same color as the nav bar */
+        color: white;
+        border-radius: 5px;
+        font-size: 18px;
+    }
+
+    .link-button:hover {
+        background-color: #45a049;
+    }
+
+    /* Navigation bar */
+    .nav-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: #4CAF50; /* Same color as the buttons */
+        color: white;
+        padding: 10px 0;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        z-index: 1000;
+    }
+
+    .nav-bar a {
+        color: white;
+        text-decoration: none;
+        padding: 10px 20px;
+        font-size: 18px;
+    }
+
+    .nav-bar a:hover {
+        background-color: #45a049; /* Same hover effect as buttons */
+    }
+</style>
+
+</head>
+<body>
+    <!-- Fixed Navigation Bar -->
+    <div class="nav-bar">
+        <a href="index.html">Home</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="admin.html">Admin Panel</a>
+    </div>
+
+    <!-- Add New Student Form -->
+    <h2>Add New Student</h2>
+    <form id="add-student-form">
+        <label for="student-id-name">Student ID / Name:</label>
+        <input type="text" id="student-id-name" required />
+        
+        <label for="credits">Credits:</label>
+        <input type="number" id="credits" value="10" required />
+        
+        <button type="submit">Add Student</button>
+    </form>
+
+    <!-- Edit Student Credits Form -->
+    <h2>Edit Student Credits</h2>
+    <form id="edit-credits-form">
+        <label for="edit-student-id">Student ID / Name:</label>
+        <input type="text" id="edit-student-id" required />
+        
+        <label for="edit-credits">New Credits:</label>
+        <input type="number" id="edit-credits" required />
+        
+        <button type="submit">Update Credits</button>
+    </form>
+
+    <!-- Student List -->
+    <h2>Student List</h2>
+    <ul id="student-list"></ul>
+
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, setDoc, updateDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDZr19E8Az31IFO-N5UQmEdYH9dPsObBHE",
+        authDomain: "patagqrattendance.firebaseapp.com",
+        projectId: "patagqrattendance",
+        storageBucket: "patagqrattendance.firebasestorage.app",
+        messagingSenderId: "291584697761",
+        appId: "1:291584697761:web:4579629c4acdcfc1f517e0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const addStudentForm = document.getElementById("add-student-form");
+    const editCreditsForm = document.getElementById("edit-credits-form");
+
+    addStudentForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const studentIdName = document.getElementById("student-id-name").value;
+        const credits = parseInt(document.getElementById("credits").value);
+
+        if (!studentIdName || !credits) {
+            alert("Please provide both student ID and credits.");
+            return;
+        }
+
+        try {
+            await setDoc(doc(db, "students", studentIdName), {
+                studentId: studentIdName,
+                name: studentIdName,
+                credits: credits
+            });
+
+            alert("Student added successfully!");
+            loadStudentList();
+        } catch (error) {
+            console.error("Error adding student:", error);
+        }
+    });
+
+    editCreditsForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const studentIdName = document.getElementById("edit-student-id").value;
+        const newCredits = parseInt(document.getElementById("edit-credits").value);
+
+        if (!studentIdName || !newCredits) {
+            alert("Please provide a student ID and new credits.");
+            return;
+        }
+
+        try {
+            const studentDocRef = doc(db, "students", studentIdName);
+            const studentDoc = await getDoc(studentDocRef);
+
+            if (!studentDoc.exists()) {
+                alert("Student not found!");
+                return;
+            }
+
+            await updateDoc(studentDocRef, {
+                credits: newCredits
+            });
+
+            alert("Student credits updated successfully!");
+            loadStudentList();
+        } catch (error) {
+            console.error("Error updating credits:", error);
+        }
+    });
+
+    async function loadStudentList() {
+        const studentListElement = document.getElementById("student-list");
+        studentListElement.innerHTML = "";
+
+        try {
+            const querySnapshot = await getDocs(collection(db, "students"));
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const listItem = document.createElement("li");
+                listItem.textContent = `ID / Name: ${data.studentId}, Credits: ${data.credits}`;
+                studentListElement.appendChild(listItem);
+            });
+        } catch (error) {
+            console.error("Error loading student list:", error);
+        }
+    }
+
+    window.onload = loadStudentList;
+</script>
+
+</body>
+</html>
