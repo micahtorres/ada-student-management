@@ -127,15 +127,15 @@
         <label for="student-id-name">Student ID / Name:</label>
         <input type="text" id="student-id-name" required />
         
-        <label for="credits">Credits:</label>
-        <input type="number" id="credits" value="10" required />
+        <label for="credits" style="visibility: hidden;">Credits:</label>
+        <input type="number" style="visibility: hidden; width: 0;" id="credits" value="100" required />
         
         <button type="submit">Add Student</button>
     </form>
 
     <!-- Edit Student Credits Form -->
-    <h2>Edit Student Credits</h2>
-    <form id="edit-credits-form">
+    <!--<h2>Edit Student Credits</h2>-->
+    <form id="edit-credits-form" style="visibility: hidden;">
         <label for="edit-student-id">Student ID / Name:</label>
         <input type="text" id="edit-student-id" required />
         
@@ -233,7 +233,8 @@
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 const listItem = document.createElement("li");
-                listItem.textContent = `ID / Name: ${data.studentId}, Credits: ${data.credits}`;
+                listItem.textContent = `ID / Name: ${data.studentId}`;
+                //listItem.textContent = `ID / Name: ${data.studentId}, Credits: ${data.credits}`;
                 studentListElement.appendChild(listItem);
             });
         } catch (error) {
