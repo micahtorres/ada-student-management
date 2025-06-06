@@ -6,6 +6,12 @@
     <title>Admin - Manage Students</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+
+    <script>
+  if (localStorage.getItem("authenticated") !== "true") {
+    window.location.href = "login.html";
+  }
+</script>
     <style>
     body {
         font-family: Arial, sans-serif;
