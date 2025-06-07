@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Client Login</title>
+
+
   <style>
     body {
       margin: 0;
@@ -79,18 +81,26 @@
     <button onclick="login()">Login</button>
   </div>
 
-  <script>
-    const PASSWORD = "adasoccerph2025!"; // Change this to your password
+  <!-- Include this before your <script> that uses CryptoJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-    function login() {
-      const input = document.getElementById("password").value;
-      if (input === PASSWORD) {
-        localStorage.setItem("authenticated", "true");
-        window.location.href = "attendance.html"; // Redirect to your app
-      } else {
-        alert("Incorrect password");
-      }
+<!-- Your updated script -->
+<script>
+ 
+  const HASHED_PASSWORD = "592cca7d6636f12938faed9ffefeeb37";
+
+  function login() {
+    const input = document.getElementById("password").value.trim(); // trim removes extra spaces
+    const hashedInput = CryptoJS.MD5(input).toString();
+
+    if (hashedInput === HASHED_PASSWORD) {
+      localStorage.setItem("authenticated", "true");
+      window.location.href = "attendance.html";
+    } else {
+      alert("Incorrect password");
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
